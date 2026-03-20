@@ -28,7 +28,7 @@ const TopDoctors = () => {
           <div
             key={item._id || item.name}
             onClick={() => {
-              navigate(`/appointments/${item._id}`);
+              navigate(`/appointment/${item._id}`);
               window.scrollTo(0, 0);
             }}
             className="border border-blue-200 rounded-xl overflow-hidden cursor-pointer hover:-translate-y-2 transition-transform duration-300"

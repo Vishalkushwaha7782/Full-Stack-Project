@@ -60,7 +60,7 @@ const Doctors = () => {
               {filterDoc.map((item) => (
                 <div
                   key={item._id}
-                  onClick={() => navigate(`/appointments/${item._id}`)}
+                  onClick={() => navigate(`/appointment/${item._id}`)}
                   className="border border-blue-200 rounded-xl overflow-hidden cursor-pointer hover:-translate-y-2 transition-transform duration-300"
                 >
                   <img
