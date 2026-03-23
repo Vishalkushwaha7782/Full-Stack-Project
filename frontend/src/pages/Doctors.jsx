@@ -8,6 +8,7 @@ const Doctors = () => {
 
   const { doctors } = useContext(AppContext);
   const [filterDoc, setFilterDoc] = useState([]);
+  const [showFilter, setShowFilter] = useState(false);
 
   useEffect(() => {
     if (!doctors) return;
@@ -29,16 +30,27 @@ const Doctors = () => {
   ];
 
   return (
-    <div>
+    <div className="max-w-7xl mx-auto px-4">
       <p className="text-gray-600">Browse through the doctors specialist.</p>
 
       <div className="flex flex-col sm:flex-row items-start gap-5 my-5">
-        <div className="flex flex-col gap-4 text-sm text-gray-600">
+        <button
+          className={`py-1 px-3 border rounded text-sm transition-all sm:hidden ${showFilter ? "bg-[#5f6FFF] text-white" : ""}`}
+          onClick={() => setShowFilter((prev) => !prev)}
+        >
+          Filters
+        </button>
+        <div
+          className={`flex-col gap-4 text-sm text-gray-600 ${showFilter ? "flex" : "hidden"} sm:flex`}
+        >
           {categories.map((cat) => (
             <p
               key={cat}
-              onClick={() => navigate(`/doctors/${cat}`)}
-              className={`w-[94vw] sm:w-auto pl-3 py-1.5 pr-16 border rounded cursor-pointer transition-all
+              onClick={() => {
+                navigate(`/doctors/${cat}`);
+                setShowFilter(false);
+              }}
+              className={`w-full sm:w-auto pl-3 py-1.5 pr-6 border rounded cursor-pointer transition-all
                 ${
                   speciality === cat
                     ? "bg-blue-100 border-blue-500 text-blue-700"
@@ -64,7 +76,7 @@ const Doctors = () => {
                   className="border border-blue-200 rounded-xl overflow-hidden cursor-pointer hover:-translate-y-2 transition-transform duration-300"
                 >
                   <img
-                    className="bg-blue-50 w-full h-48 object-cover"
+                    className="bg-blue-50 w-full h-48 sm:h-44 md:h-48 object-cover"
                     src={item.image}
                     alt={item.name}
                     onError={(e) => {
