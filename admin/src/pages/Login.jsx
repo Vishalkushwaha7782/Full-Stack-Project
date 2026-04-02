@@ -16,20 +16,33 @@ const Login = () => {
     event.preventDefault();
 
     try {
-      if (state === "Admin") {
-        const { data } = await axios.post(backendUrl + "/api/admin/login", {
-          email,
-          password,
-        });
-        if (data.success) {
-          localStorage.setItem("aToken", data.token);
-          setAToken(data.token);
-        } else {
-          toast.error(data.message);
+      const response = await axios.post(backendUrl + "/api/admin/login", {
+        email,
+        password,
+      });
+
+      console.log("FULL RESPONSE:", response);
+      console.log("DATA:", response.data);
+      console.log("TOKEN:", response.data.token);
+
+      if (response.data.success) {
+        const token = response.data.token;
+
+        if (!token) {
+          console.log("TOKEN IS UNDEFINED — LOGIN FAILED");
+          return;
         }
+
+        localStorage.setItem("atoken", token);
+        setAToken(token);
+
+        console.log("SAVED TOKEN:", localStorage.getItem("atoken"));
       } else {
+        console.log("LOGIN FAILED:", response.data.message);
       }
-    } catch (error) {}
+    } catch (error) {
+      console.log("LOGIN ERROR:", error);
+    }
   };
 
   return (
