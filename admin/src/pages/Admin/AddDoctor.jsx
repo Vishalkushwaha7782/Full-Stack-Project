@@ -29,7 +29,6 @@ const AddDoctor = () => {
 
       const token = localStorage.getItem("atoken");
 
-      // ✅ added safety check
       if (!token) {
         console.log("NO TOKEN FOUND");
         return toast.error("Please login first");
@@ -66,11 +65,22 @@ const AddDoctor = () => {
 
       if (data.success) {
         toast.success("Doctor Added Successfully");
+        setDocImg(false);
+        setName("");
+        setEmail("");
+        setPassword("");
+        setExperience("1 Year");
+        setFees("");
+        setAbout("");
+        setSpeciality("General physician");
+        setDegree("");
+        setAddress1("");
+        setAddress2("");
       } else {
         toast.error(data.message);
       }
     } catch (error) {
-      console.log(error); // ✅ added error log
+      console.log(error);
       toast.error("Something went wrong");
     }
   };
