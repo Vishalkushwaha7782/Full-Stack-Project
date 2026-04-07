@@ -1,41 +1,32 @@
 import jwt from "jsonwebtoken";
 
-// admin authentication middleware
-
 const authAdmin = async (req, res, next) => {
   try {
-    console.log("HEADERS:", req.headers);
-    const atoken = req.headers.atoken;
+    const authHeader = req.headers.authorization;
 
-    console.log("RECEIVED TOKEN:", atoken);
-
-    if (!atoken) {
-      return res.json({
-        success: false,
-        message: "Not Authorized Login Again",
-      });
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res
+        .status(401)
+        .json({ success: false, message: "Not Authorized" });
     }
 
-    // verify token
-    const token_decode = jwt.verify(atoken, process.env.JWT_SECRET);
+    const token = authHeader.split(" ")[1];
 
-    console.log("DECODE:", token_decode);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    // check email from token
-    if (token_decode.email !== process.env.ADMIN_EMAIL) {
-      return res.json({
-        success: false,
-        message: "Not Authorized Login Again",
-      });
+    if (decoded.role !== "admin") {
+      return res.status(403).json({ success: false, message: "Forbidden" });
     }
 
     next();
-  } catch (error) {
-    console.log(error);
-    res.json({
-      success: false,
-      message: error.message,
-    });
+  } catch (err) {
+    console.log(err);
+
+    if (err.name === "TokenExpiredError") {
+      return res.status(401).json({ success: false, message: "Token expired" });
+    }
+
+    return res.status(401).json({ success: false, message: "Invalid token" });
   }
 };
 
