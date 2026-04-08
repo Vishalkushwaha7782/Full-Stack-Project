@@ -5,6 +5,7 @@ import connectDb from "./config/mongodb.js";
 import connectCloudinary from "./config/cloudinary.js";
 import adminRouter from "./routes/adminRoute.js";
 import doctorRouter from "./routes/docterRoute.js";
+import userRouter from "./routes/userRoute.js";
 
 // app config
 const app = express();
@@ -21,6 +22,8 @@ app.use("/api/admin", adminRouter);
 
 // add to connect backend with frontend
 app.use("/api/doctor", doctorRouter);
+
+app.use("/api/user", userRouter);
 
 app.get("/", (req, res) => {
   res.send("API WORKING ");
