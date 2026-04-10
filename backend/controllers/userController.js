@@ -86,4 +86,39 @@ const loginUser = async (req, res) => {
   }
 };
 
-export { registerUser, loginUser };
+// API to get user profile data
+const getProfile = async (req, res) => {
+  try {
+    const userId = req.userId;
+
+    // check if userId exists (important safety check)
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized: No userId found",
+      });
+    }
+
+    const userData = await userModel.findById(userId).select("-password");
+
+    if (!userData) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      userData,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+export { registerUser, loginUser, getProfile };
