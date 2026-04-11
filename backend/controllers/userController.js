@@ -125,7 +125,7 @@ const getProfile = async (req, res) => {
 
 const updateProfile = async (req, res) => {
   try {
-    const userId = req.userId; // ✅ from middleware
+    const userId = req.userId;
     const { name, phone, address, dob, gender } = req.body;
     const imageFile = req.file;
 
@@ -136,13 +136,19 @@ const updateProfile = async (req, res) => {
       });
     }
 
-    // handle address safely
     let parsedAddress;
+
     try {
       parsedAddress = address ? JSON.parse(address) : {};
     } catch {
-      parsedAddress = address;
+      parsedAddress = address || {};
     }
+
+    // ensure default structure
+    parsedAddress = {
+      line1: parsedAddress?.line1 || "",
+      line2: parsedAddress?.line2 || "",
+    };
 
     let updateData = {
       name,
@@ -152,7 +158,6 @@ const updateProfile = async (req, res) => {
       gender,
     };
 
-    // upload image if exists
     if (imageFile) {
       const imageUpload = await cloudinary.uploader.upload(imageFile.path, {
         resource_type: "image",
