@@ -3,6 +3,9 @@ import bcrypt from "bcrypt";
 import userModel from "../models/userModel.js";
 import jwt from "jsonwebtoken";
 import { v2 as cloudinary } from "cloudinary";
+import doctorModel from "../models/doctorModel.js";
+import appointmentModel from "../models/appointmentModel.js";
+
 // API to register user
 const registerUser = async (req, res) => {
   try {
@@ -181,4 +184,108 @@ const updateProfile = async (req, res) => {
   }
 };
 
-export { registerUser, loginUser, getProfile, updateProfile };
+// API to book appointment
+
+const bookAppointment = async (req, res) => {
+  try {
+    const { docId, slotDate, slotTime } = req.body;
+    const userId = req.userId;
+
+    // 1. Validate input
+    if (!docId || !slotDate || !slotTime) {
+      return res.status(400).json({
+        success: false,
+        message: "Missing required fields",
+      });
+    }
+
+    // 2. Find doctor
+    const docData = await doctorModel.findById(docId);
+
+    if (!docData) {
+      return res.status(404).json({
+        success: false,
+        message: "Doctor not found",
+      });
+    }
+
+    if (!docData.available) {
+      return res.json({
+        success: false,
+        message: "Doctor not available",
+      });
+    }
+
+    // 3. Check slot availability
+    let slots_booked = { ...(docData.slots_booked || {}) };
+
+    if (slots_booked[slotDate]?.includes(slotTime)) {
+      return res.json({
+        success: false,
+        message: "Slot not available",
+      });
+    }
+
+    // 4. Convert time to 24-hour format
+    const convertTo24Hour = (time) => {
+      let [hourMin, modifier] = time.split(" ");
+      let [hours, minutes] = hourMin.split(":");
+
+      if (modifier.toLowerCase() === "pm" && hours !== "12") {
+        hours = parseInt(hours, 10) + 12;
+      }
+      if (modifier.toLowerCase() === "am" && hours === "12") {
+        hours = "00";
+      }
+
+      return `${hours}:${minutes}`;
+    };
+
+    const slotDateTime = new Date(`${slotDate}T${convertTo24Hour(slotTime)}`);
+
+    // 5. Final safety check (very important)
+    if (isNaN(slotDateTime)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid date/time format",
+      });
+    }
+
+    // 6. Save slot in doctor's booked slots
+    if (!slots_booked[slotDate]) {
+      slots_booked[slotDate] = [];
+    }
+
+    slots_booked[slotDate].push(slotTime);
+
+    // 7. Create appointment (MATCHING SCHEMA)
+    const appointmentData = {
+      userId,
+      doctorId: docId,
+      slotDateTime,
+      amount: docData.fees,
+    };
+
+    await appointmentModel.create(appointmentData);
+
+    // 8. Update doctor
+    await doctorModel.findByIdAndUpdate(docId, { slots_booked });
+
+    // 9. Response
+    res.json({
+      success: true,
+      message: "Appointment Booked",
+    });
+  } catch (error) {
+    console.log("FULL ERROR:", error);
+    console.log("BODY:", req.body);
+    console.log("USER:", req.userId);
+
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+export { registerUser, loginUser, getProfile, updateProfile, bookAppointment };

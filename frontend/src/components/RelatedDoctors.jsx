@@ -10,9 +10,9 @@ const RelatedDoctors = ({ docId, speciality }) => {
   const [relDoc, setRelDocs] = useState([]);
 
   useEffect(() => {
-    if (doctors.length > 0 && speciality) {
+    if (doctors?.length > 0 && speciality) {
       const doctorsData = doctors.filter(
-        (doc) => doc.speciality === speciality && doc._id != docId,
+        (doc) => doc && doc.speciality === speciality && doc._id !== docId,
       );
       setRelDocs(doctorsData);
     }
@@ -27,47 +27,54 @@ const RelatedDoctors = ({ docId, speciality }) => {
       </p>
 
       <div className="w-full grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-4 pt-5 gap-y-6 px-3 sm:px-0">
-        {relDoc.slice(0, 5).map((item) => (
-          <div
-            key={item._id || item.name}
-            onClick={() => {
-              navigate(`/appointment/${item._id}`);
-              window.scrollTo(0, 0);
-            }}
-            className="border border-blue-200 rounded-xl overflow-hidden cursor-pointer hover:-translate-y-2 transition-transform duration-300"
-          >
-            <img
-              className="bg-blue-50 w-full h-48 object-cover"
-              src={item.image}
-              alt={item.name}
-              onError={(e) => {
-                e.target.src = "/fallback.png";
+        {relDoc?.slice(0, 5)?.map((item, index) => {
+          if (!item) return null;
+
+          return (
+            <div
+              key={item._id || index}
+              onClick={() => {
+                if (!item._id) return;
+                navigate(`/appointment/${item._id}`);
+                window.scrollTo(0, 0);
               }}
-            />
+              className="border border-blue-200 rounded-xl overflow-hidden cursor-pointer hover:-translate-y-2 transition-transform duration-300"
+            >
+              <img
+                className="bg-blue-50 w-full h-48 object-cover"
+                src={item.image}
+                alt={item.name}
+                onError={(e) => {
+                  e.target.src = "/fallback.png";
+                }}
+              />
 
-            <div className="p-4">
-              <div className="flex items-center gap-2 text-sm">
-                <span
-                  className={`w-2 h-2 rounded-full ${
-                    item.available !== false ? "bg-green-500" : "bg-red-500"
-                  }`}
-                ></span>
+              <div className="p-4">
+                <div className="flex items-center gap-2 text-sm">
+                  <span
+                    className={`w-2 h-2 rounded-full ${
+                      item.available !== false ? "bg-green-500" : "bg-red-500"
+                    }`}
+                  ></span>
 
-                <p
-                  className={
-                    item.available !== false ? "text-green-500" : "text-red-500"
-                  }
-                >
-                  {item.available !== false ? "Available" : "Not Available"}
-                </p>
+                  <p
+                    className={
+                      item.available !== false
+                        ? "text-green-500"
+                        : "text-red-500"
+                    }
+                  >
+                    {item.available !== false ? "Available" : "Not Available"}
+                  </p>
+                </div>
+
+                <p className="text-gray-900 text-lg font-medium">{item.name}</p>
+
+                <p className="text-gray-600 text-sm">{item.speciality}</p>
               </div>
-
-              <p className="text-gray-900 text-lg font-medium">{item.name}</p>
-
-              <p className="text-gray-600 text-sm">{item.speciality}</p>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       <button
