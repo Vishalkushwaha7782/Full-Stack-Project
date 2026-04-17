@@ -5,6 +5,7 @@ import jwt from "jsonwebtoken";
 import { v2 as cloudinary } from "cloudinary";
 import doctorModel from "../models/doctorModel.js";
 import appointmentModel from "../models/appointmentModel.js";
+import razorpay from "razorpay";
 
 // API to register user
 const registerUser = async (req, res) => {
@@ -399,6 +400,84 @@ const cancelAppointment = async (req, res) => {
   }
 };
 
+const razorpayInstance = new razorpay({
+  key_id: process.env.RAZORPAY_KEY_ID,
+  key_secret: process.env.RAZORPAY_KEY_SECRET,
+});
+
+// API to make payment of appointment using razorpay
+
+const paymentRazorpay = async (req, res) => {
+  try {
+    const userId = req.userId;
+    const { appointmentId } = req.body;
+
+    if (!appointmentId) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid appointment ID",
+      });
+    }
+
+    const appointmentData = await appointmentModel.findById(appointmentId);
+
+    if (!appointmentData) {
+      return res.status(404).json({
+        success: false,
+        message: "Appointment not found",
+      });
+    }
+
+    if (appointmentData.userId.toString() !== userId) {
+      return res.status(403).json({
+        success: false,
+        message: "Unauthorized",
+      });
+    }
+
+    if (appointmentData.cancelled) {
+      return res.status(400).json({
+        success: false,
+        message: "Appointment is cancelled",
+      });
+    }
+
+    if (appointmentData.payment) {
+      return res.status(400).json({
+        success: false,
+        message: "Already paid",
+      });
+    }
+
+    const options = {
+      amount: appointmentData.amount * 100,
+      currency: process.env.CURRENCY,
+      receipt: appointmentId,
+      notes: {
+        appointmentId,
+        userId,
+      },
+    };
+
+    const order = await razorpayInstance.orders.create(options);
+
+    // store order id
+    appointmentData.paymentOrderId = order.id;
+    await appointmentData.save();
+
+    res.json({
+      success: true,
+      order,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
 export {
   registerUser,
   loginUser,
@@ -407,4 +486,5 @@ export {
   bookAppointment,
   listAppointment,
   cancelAppointment,
+  paymentRazorpay,
 };
