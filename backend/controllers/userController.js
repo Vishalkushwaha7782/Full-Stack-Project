@@ -277,9 +277,11 @@ const bookAppointment = async (req, res) => {
       message: "Appointment Booked",
     });
   } catch (error) {
-    console.log("FULL ERROR:", error);
-    console.log("BODY:", req.body);
-    console.log("USER:", req.userId);
+    // for debugging
+
+    // console.log("FULL ERROR:", error);
+    // console.log("BODY:", req.body);
+    // console.log("USER:", req.userId);
 
     res.status(500).json({
       success: false,
@@ -288,4 +290,42 @@ const bookAppointment = async (req, res) => {
   }
 };
 
-export { registerUser, loginUser, getProfile, updateProfile, bookAppointment };
+// Api to get user appointments for frontend my-appointments page
+
+const listAppointment = async (req, res) => {
+  try {
+    const userId = req.userId;
+
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: "User not authenticated",
+      });
+    }
+
+    const appointments = await appointmentModel
+      .find({ userId })
+      .populate("doctorId", "name image speciality address")
+      .sort({ createdAt: -1 })
+      .lean();
+
+    res.json({
+      success: true,
+      appointments,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+export {
+  registerUser,
+  loginUser,
+  getProfile,
+  updateProfile,
+  bookAppointment,
+  listAppointment,
+};
