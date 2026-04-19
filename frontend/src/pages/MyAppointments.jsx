@@ -2,10 +2,13 @@ import React, { useContext, useEffect, useState } from "react";
 import { AppContext } from "../context/AppContext";
 import axios from "axios";
 import { toast } from "react-toastify";
+import { useNavigate } from "react-router-dom";
 
 const MyAppointments = () => {
   const { backendUrl, token } = useContext(AppContext);
   const [appointments, setAppointments] = useState([]);
+
+  const navigate = useNavigate();
 
   const getUserAppointments = async () => {
     try {
@@ -64,6 +67,12 @@ const MyAppointments = () => {
 
   const initPay = (order) => {
     console.log("KEY:", import.meta.env.VITE_RAZORPAY_KEY_ID);
+
+    if (!order || !order.id) {
+      toast.error("Invalid order data");
+      return;
+    }
+
     const options = {
       key: import.meta.env.VITE_RAZORPAY_KEY_ID,
       amount: order.amount,
@@ -71,13 +80,52 @@ const MyAppointments = () => {
       name: "Appointment Payment",
       description: "Appointment Payment",
       order_id: order.id,
-      receipt: order.receipt,
+
       handler: async (response) => {
-        console.log(response);
+        try {
+          const { data } = await axios.post(
+            backendUrl + "/api/user/verifyRazorpay",
+            response,
+            { headers: { Authorization: `Bearer ${token}` } },
+          );
+
+          if (data.success) {
+            toast.success("Payment successful");
+            getUserAppointments();
+            navigate("/my-appointments");
+          } else {
+            toast.error(data.message || "Verification failed");
+          }
+        } catch (error) {
+          console.error(error);
+          toast.error("Something went wrong");
+        }
+      },
+
+      prefill: {
+        name: "User",
+        email: "user@email.com",
+      },
+
+      theme: {
+        color: "#3399cc",
       },
     };
 
     const rzp = new window.Razorpay(options);
+
+    rzp.on("payment.failed", function (response) {
+      console.log("FULL RESPONSE:", response);
+
+      console.log("CODE:", response.error.code);
+      console.log("DESCRIPTION:", response.error.description);
+      console.log("REASON:", response.error.reason);
+      console.log("STEP:", response.error.step);
+      console.log("SOURCE:", response.error.source);
+
+      toast.error(response.error.description || "Payment failed");
+    });
+
     rzp.open();
   };
 
@@ -166,7 +214,12 @@ const MyAppointments = () => {
 
                 {/* Actions */}
                 <div className="flex flex-col gap-2 justify-end">
-                  {!item.cancelled && (
+                  {item.cancelled === false && item.payment === true && (
+                    <button className="sm:min-w-48 py-2 border rounded text-stone-500 bg-indigo-50">
+                      Paid
+                    </button>
+                  )}
+                  {!item.cancelled && !item.payment && (
                     <button
                       onClick={() => appointmentRazorpay(item._id)}
                       className="text-sm text-stone-500 text-center sm:min-w-48 py-2 border rounded hover:bg-[#5f6FFF] hover:text-white transition-all duration-300 cursor-pointer"
