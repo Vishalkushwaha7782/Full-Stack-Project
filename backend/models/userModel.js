@@ -15,7 +15,7 @@ const userSchema = new mongoose.Schema({
     enum: ["Male", "Female", "Other"],
     // default: "Not Selected",
   },
-  dob: { type: String, default: "Not Selected" },
+  dob: { type: Date, default: null },
   phone: { type: String, default: "0000000000" },
 });
 
