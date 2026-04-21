@@ -9,6 +9,10 @@ const AdminContextProvider = ({ children }) => {
 
   const [doctors, setDoctors] = useState([]);
 
+  const [loading, setLoading] = useState(false);
+
+  const [appointments, setAppointments] = useState([]);
+
   const backendUrl = import.meta.env.VITE_BACKEND_URL;
 
   const getAllDoctors = async () => {
@@ -70,6 +74,42 @@ const AdminContextProvider = ({ children }) => {
     }
   };
 
+  const getAllAppointments = async () => {
+    try {
+      if (!aToken) {
+        toast.error("Unauthorized access");
+        return;
+      }
+
+      setLoading(true);
+
+      const { data } = await axios.get(backendUrl + "/api/admin/appointments", {
+        headers: { Authorization: `Bearer ${aToken}` },
+      });
+
+      if (data.success) {
+        setAppointments(data.appointments || []);
+        console.log(data.appointments);
+      } else {
+        toast.error(data.message || "Failed to fetch appointments");
+      }
+    } catch (error) {
+      if (error.response?.status === 401) {
+        setAToken(null);
+        localStorage.removeItem("aToken");
+        toast.error("Session expired. Please login again.");
+      } else {
+        toast.error(
+          error.response?.data?.message ||
+            error.message ||
+            "Something went wrong",
+        );
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <AdminContext.Provider
       value={{
@@ -79,6 +119,10 @@ const AdminContextProvider = ({ children }) => {
         doctors,
         getAllDoctors,
         changeAvailability,
+        appointments,
+        setAppointments,
+        getAllAppointments,
+        loading,
       }}
     >
       {children}

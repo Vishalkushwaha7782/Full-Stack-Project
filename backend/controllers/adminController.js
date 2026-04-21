@@ -3,6 +3,7 @@ import bcrypt from "bcrypt";
 import { v2 as cloudinary } from "cloudinary";
 import doctorModel from "../models/doctorModel.js";
 import jwt from "jsonwebtoken";
+import appointmentModel from "../models/appointmentModel.js";
 
 const addDoctor = async (req, res) => {
   try {
@@ -20,7 +21,7 @@ const addDoctor = async (req, res) => {
 
     const imageFile = req.file;
 
-    // ✅ Check all required fields
+    // Check all required fields
     if (
       !name ||
       !email ||
@@ -35,7 +36,7 @@ const addDoctor = async (req, res) => {
       return res.json({ success: false, message: "Missing Details" });
     }
 
-    // ✅ Check image file
+    // Check image file
     if (!imageFile) {
       return res.json({
         success: false,
@@ -43,7 +44,7 @@ const addDoctor = async (req, res) => {
       });
     }
 
-    // ✅ Correct email validation
+    // Correct email validation
     if (!validator.isEmail(email)) {
       return res.json({
         success: false,
@@ -51,7 +52,7 @@ const addDoctor = async (req, res) => {
       });
     }
 
-    // ✅ Password validation
+    // Password validation
     if (password.length < 8) {
       return res.json({
         success: false,
@@ -59,11 +60,11 @@ const addDoctor = async (req, res) => {
       });
     }
 
-    // ✅ Hash password
+    // Hash password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    // ✅ Upload image to Cloudinary
+    // Upload image to Cloudinary
     const uploadResult = await cloudinary.uploader.upload(imageFile.path, {
       resource_type: "image",
     });
@@ -81,7 +82,7 @@ const addDoctor = async (req, res) => {
       });
     }
 
-    // ✅ Create doctor object
+    // Create doctor object
     const doctorData = {
       name,
       email,
@@ -96,7 +97,7 @@ const addDoctor = async (req, res) => {
       date: Date.now(),
     };
 
-    // ✅ Save to DB
+    // Save to DB
     const newDoctor = new doctorModel(doctorData);
     await newDoctor.save();
 
@@ -166,4 +167,41 @@ const allDoctors = async (req, res) => {
   }
 };
 
-export { addDoctor, loginAdmin, allDoctors };
+// API to get all appointments list
+const appointmentsAdmin = async (req, res) => {
+  // console.log("ADMIN APPOINTMENTS API HIT");
+  try {
+    const pageNum = Math.max(1, parseInt(req.query.page) || 1);
+    const limitNum = Math.min(50, Math.max(1, parseInt(req.query.limit) || 10));
+
+    const query = {};
+
+    const [appointments, total] = await Promise.all([
+      appointmentModel
+        .find(query)
+        .populate("userId", "name image dob")
+        .populate("doctorId", "name image")
+        .sort({ createdAt: -1 })
+        .skip((pageNum - 1) * limitNum)
+        .limit(limitNum),
+
+      appointmentModel.countDocuments(query),
+    ]);
+    // console.log(JSON.stringify(appointments[0], null, 2));
+
+    res.json({
+      success: true,
+      appointments,
+      total,
+      page: pageNum,
+      pages: Math.ceil(total / limitNum),
+    });
+  } catch (error) {
+    console.error("ADMIN APPOINTMENTS ERROR:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
+  }
+};
+export { addDoctor, loginAdmin, allDoctors, appointmentsAdmin };
