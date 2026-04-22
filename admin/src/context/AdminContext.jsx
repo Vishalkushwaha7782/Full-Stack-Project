@@ -110,6 +110,24 @@ const AdminContextProvider = ({ children }) => {
     }
   };
 
+  const cancelAppointment = async (appointmentId) => {
+    try {
+      const { data } = await axios.post(
+        backendUrl + "/api/admin/cancel-appointment",
+        { appointmentId },
+        { headers: { Authorization: `Bearer ${aToken}` } },
+      );
+      if (data.success) {
+        toast.success(data.message);
+        getAllAppointments();
+      } else {
+        toast.error(data.message);
+      }
+    } catch (error) {
+      toast.error(error.message);
+    }
+  };
+
   return (
     <AdminContext.Provider
       value={{
@@ -123,6 +141,7 @@ const AdminContextProvider = ({ children }) => {
         setAppointments,
         getAllAppointments,
         loading,
+        cancelAppointment,
       }}
     >
       {children}

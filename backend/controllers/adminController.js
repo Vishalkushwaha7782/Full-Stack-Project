@@ -204,4 +204,80 @@ const appointmentsAdmin = async (req, res) => {
     });
   }
 };
-export { addDoctor, loginAdmin, allDoctors, appointmentsAdmin };
+
+// API for appointment cancelation
+const appointmentCancel = async (req, res) => {
+  try {
+    const { appointmentId } = req.body;
+
+    if (!appointmentId) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid appointment ID",
+      });
+    }
+
+    const appointmentData = await appointmentModel.findById(appointmentId);
+
+    if (!appointmentData) {
+      return res.status(404).json({
+        success: false,
+        message: "Appointment not found",
+      });
+    }
+
+    if (appointmentData.cancelled) {
+      return res.status(400).json({
+        success: false,
+        message: "Appointment already cancelled",
+      });
+    }
+
+    await appointmentModel.findByIdAndUpdate(appointmentId, {
+      cancelled: true,
+    });
+
+    const doctorId = appointmentData.doctorId;
+    const slotDateTime = appointmentData.slotDateTime;
+
+    const doctorData = await doctorModel.findById(doctorId);
+
+    if (doctorData) {
+      let slots_booked = { ...doctorData.slots_booked };
+
+      const date = new Date(slotDateTime);
+      const slotDate = date.toISOString().split("T")[0];
+      const slotTime = date.toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+
+      if (slots_booked[slotDate]) {
+        slots_booked[slotDate] = slots_booked[slotDate].filter(
+          (e) => e !== slotTime,
+        );
+      }
+
+      await doctorModel.findByIdAndUpdate(doctorId, { slots_booked });
+    }
+
+    res.json({
+      success: true,
+      message: "Appointment Cancelled",
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+export {
+  addDoctor,
+  loginAdmin,
+  allDoctors,
+  appointmentsAdmin,
+  appointmentCancel,
+};
