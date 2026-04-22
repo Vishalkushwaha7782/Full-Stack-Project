@@ -12,6 +12,7 @@ const AdminContextProvider = ({ children }) => {
   const [loading, setLoading] = useState(false);
 
   const [appointments, setAppointments] = useState([]);
+  const [dashData, setDashData] = useState(false);
 
   const backendUrl = import.meta.env.VITE_BACKEND_URL;
 
@@ -128,6 +129,23 @@ const AdminContextProvider = ({ children }) => {
     }
   };
 
+  const getDashData = async () => {
+    try {
+      const { data } = await axios.get(backendUrl + "/api/admin/dashboard", {
+        headers: { Authorization: `Bearer ${aToken}` },
+      });
+
+      if (data.success) {
+        setDashData(data.dashData);
+        console.log(data.dashData);
+      } else {
+        toast.error(data.message);
+      }
+    } catch (error) {
+      toast.error(error.message);
+    }
+  };
+
   return (
     <AdminContext.Provider
       value={{
@@ -142,6 +160,8 @@ const AdminContextProvider = ({ children }) => {
         getAllAppointments,
         loading,
         cancelAppointment,
+        dashData,
+        getDashData,
       }}
     >
       {children}
