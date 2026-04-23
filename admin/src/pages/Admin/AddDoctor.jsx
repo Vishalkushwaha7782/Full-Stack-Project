@@ -35,7 +35,6 @@ const AddDoctor = () => {
       }
 
       const formData = new FormData();
-
       formData.append("image", docImg);
       formData.append("name", name);
       formData.append("email", email);
@@ -57,7 +56,7 @@ const AddDoctor = () => {
         formData,
         {
           headers: {
-            atoken: token,
+            Authorization: `Bearer ${token}`, // ✅ THIS IS THE FIX
             "Content-Type": "multipart/form-data",
           },
         },
@@ -65,6 +64,8 @@ const AddDoctor = () => {
 
       if (data.success) {
         toast.success("Doctor Added Successfully");
+
+        // ✅ Reset form
         setDocImg(false);
         setName("");
         setEmail("");
@@ -81,7 +82,7 @@ const AddDoctor = () => {
       }
     } catch (error) {
       console.log(error);
-      toast.error("Something went wrong");
+      toast.error(error.message || "Something went wrong");
     }
   };
 
