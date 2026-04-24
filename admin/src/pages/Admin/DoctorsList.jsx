@@ -6,14 +6,14 @@ const DoctorsList = () => {
     useContext(AdminContext);
 
   useEffect(() => {
-    console.log("TOKEN IN COMPONENT:", aToken);
-
-    if (aToken) {
-      getAllDoctors();
-    } else {
+    if (!aToken) {
       console.log("No token, API not called");
+      return;
     }
-  }, [aToken]);
+
+    console.log("Calling getAllDoctors...");
+    getAllDoctors();
+  }, [aToken, getAllDoctors]);
 
   return (
     <div className="m-5 max-h-[90vh] overflow-y-scroll">

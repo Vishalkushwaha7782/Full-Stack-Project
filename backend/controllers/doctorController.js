@@ -1,6 +1,8 @@
 import doctorModel from "../models/doctorModel.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import appointmentModel from "../models/appointmentModel.js";
+import mongoose from "mongoose";
 
 const changeAvailability = async (req, res) => {
   try {
@@ -94,4 +96,19 @@ const loginDoctor = async (req, res) => {
   }
 };
 
-export { changeAvailability, doctorList, loginDoctor };
+const appointmentsDoctor = async (req, res) => {
+  try {
+    const docId = req.docId;
+
+    const appointments = await appointmentModel
+      .find({ doctorId: new mongoose.Types.ObjectId(docId) })
+      .populate("userId");
+
+    res.json({ success: true, appointments });
+  } catch (error) {
+    console.log(error);
+    res.json({ success: false, message: error.message });
+  }
+};
+
+export { changeAvailability, doctorList, loginDoctor, appointmentsDoctor };
