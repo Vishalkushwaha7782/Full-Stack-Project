@@ -6,7 +6,13 @@ import { AppContext } from "../../context/AppContext";
 import { assets } from "../../assets/assets";
 
 export const DoctorAppointments = () => {
-  const { dToken, appointments, getAppointments } = useContext(DoctorContext);
+  const {
+    dToken,
+    appointments,
+    getAppointments,
+    completeAppointment,
+    cancelAppointment,
+  } = useContext(DoctorContext);
   const { calculateAge, currency } = useContext(AppContext);
 
   useEffect(() => {
@@ -47,18 +53,26 @@ export const DoctorAppointments = () => {
               {currency}
               {item.amount}
             </p>
-            <div className="flex items-center gap-4">
-              <img
-                className="w-10 cursor-pointer"
-                src={assets.cancel_icon}
-                alt=""
-              />
-              <img
-                className="w-10 cursor-pointer"
-                src={assets.tick_icon}
-                alt=""
-              />
-            </div>
+            {item.cancelled ? (
+              <p className="text-red-400 text-xs font-medium">Cancelled</p>
+            ) : item.isCompleted ? (
+              <p className="text-green-500 text-xs font-medium">Completed</p>
+            ) : (
+              <div className="flex items-center gap-4">
+                <img
+                  onClick={() => cancelAppointment(item._id)}
+                  className="w-10 cursor-pointer"
+                  src={assets.cancel_icon}
+                  alt=""
+                />
+                <img
+                  onClick={() => completeAppointment(item._id)}
+                  className="w-10 cursor-pointer"
+                  src={assets.tick_icon}
+                  alt=""
+                />
+              </div>
+            )}
           </div>
         ))}
       </div>

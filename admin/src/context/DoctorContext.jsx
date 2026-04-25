@@ -39,6 +39,65 @@ const DoctorContextProvider = (props) => {
       toast.error(error.message);
     }
   };
+
+  const completeAppointment = async (appointmentId) => {
+    try {
+      if (!dToken) {
+        toast.error("Unauthorized");
+        return;
+      }
+
+      const { data } = await axios.post(
+        backendUrl + "/api/doctor/complete-appointment",
+        { appointmentId },
+        {
+          headers: {
+            Authorization: `Bearer ${dToken}`,
+          },
+        },
+      );
+
+      if (data.success) {
+        toast.success(data.message);
+        getAppointments();
+      } else {
+        toast.error(data.message);
+      }
+    } catch (error) {
+      console.log(error);
+      toast.error(error.response?.data?.message || error.message);
+    }
+  };
+
+  const cancelAppointment = async (appointmentId) => {
+    try {
+      if (!dToken) {
+        toast.error("Unauthorized");
+        return;
+      }
+
+      const { data } = await axios.post(
+        backendUrl + "/api/doctor/cancel-appointment",
+        { appointmentId },
+        {
+          headers: {
+            Authorization: `Bearer ${dToken}`,
+          },
+        },
+      );
+
+      if (data.success) {
+        toast.success(data.message);
+        getAppointments();
+      } else {
+        toast.error(data.message);
+      }
+    } catch (error) {
+      console.log(error);
+      toast.error(error.response?.data?.message || error.message);
+    }
+  };
+
   const value = {
     dToken,
     setDToken,
@@ -46,6 +105,8 @@ const DoctorContextProvider = (props) => {
     appointments,
     setAppointments,
     getAppointments,
+    completeAppointment,
+    cancelAppointment,
   };
 
   return (
