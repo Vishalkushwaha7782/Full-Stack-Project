@@ -144,7 +144,7 @@ const appointmentComplete = async (req, res) => {
 // API to cancel appointment completed for doctor pannel
 const appointmentCancel = async (req, res) => {
   try {
-    const doctorId = req.docId; // from JWT (NOT from body)
+    const doctorId = req.docId;
     const { appointmentId } = req.body;
 
     const appointmentData = await appointmentModel.findById(appointmentId);
@@ -170,6 +170,44 @@ const appointmentCancel = async (req, res) => {
   }
 };
 
+// API to get dashboard data for doctor pannel
+const doctorDashboard = async (req, res) => {
+  try {
+    const docId = req.docId;
+
+    const appointments = await appointmentModel
+      .find({ doctorId: new mongoose.Types.ObjectId(docId) })
+      .populate("userId")
+      .populate("doctorId");
+
+    let earnings = 0;
+
+    appointments.forEach((item) => {
+      if (item.isCompleted || item.payment) {
+        earnings += item.amount;
+      }
+    });
+
+    const patientSet = new Set();
+
+    appointments.forEach((item) => {
+      patientSet.add(item.userId._id.toString());
+    });
+
+    const dashData = {
+      earnings,
+      appointments: appointments.length,
+      patients: patientSet.size,
+      latestAppointments: [...appointments].reverse().slice(0, 5),
+    };
+
+    res.json({ success: true, dashData });
+  } catch (error) {
+    console.log(error);
+    res.json({ success: false, message: error.message });
+  }
+};
+
 export {
   changeAvailability,
   doctorList,
@@ -177,4 +215,5 @@ export {
   appointmentsDoctor,
   appointmentCancel,
   appointmentComplete,
+  doctorDashboard,
 };
