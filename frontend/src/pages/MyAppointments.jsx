@@ -214,12 +214,14 @@ const MyAppointments = () => {
 
                 {/* Actions */}
                 <div className="flex flex-col gap-2 justify-end">
-                  {item.cancelled === false && item.payment === true && (
-                    <button className="sm:min-w-48 py-2 border rounded text-stone-500 bg-indigo-50">
-                      Paid
-                    </button>
-                  )}
-                  {!item.cancelled && !item.payment && (
+                  {item.cancelled === false &&
+                    item.payment === true &&
+                    !item.isCompleted && (
+                      <button className="sm:min-w-48 py-2 border rounded text-stone-500 bg-indigo-50">
+                        Paid
+                      </button>
+                    )}
+                  {!item.cancelled && !item.payment && !item.isCompleted && (
                     <button
                       onClick={() => appointmentRazorpay(item._id)}
                       className="text-sm text-stone-500 text-center sm:min-w-48 py-2 border rounded hover:bg-[#5f6FFF] hover:text-white transition-all duration-300 cursor-pointer"
@@ -228,7 +230,7 @@ const MyAppointments = () => {
                     </button>
                   )}
 
-                  {!item.cancelled && (
+                  {!item.cancelled && !item.isCompleted && (
                     <button
                       onClick={() => cancelAppointment(item._id)}
                       className="text-sm text-stone-500 text-center sm:min-w-48 py-2 border rounded hover:bg-red-600 hover:text-white transition-all duration-300 cursor-pointer"
@@ -236,9 +238,15 @@ const MyAppointments = () => {
                       Cancel appointment
                     </button>
                   )}
-                  {item.cancelled && (
+                  {item.cancelled && !item.isCompleted && (
                     <button className="sm:min-w-48 py-2 border border-red-500 rounded text-red-500">
                       Appointment Cancelled
+                    </button>
+                  )}
+
+                  {item.isCompleted && (
+                    <button className="sm:min-w-48 px-6 py-2 border border-green-500 text-green-500 rounded-lg font-medium transition duration-200 hover:bg-green-500 hover:text-white focus:outline-none focus:ring-2 focus:ring-green-400">
+                      Completed
                     </button>
                   )}
                 </div>
