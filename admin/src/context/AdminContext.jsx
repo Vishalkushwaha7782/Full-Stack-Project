@@ -1,17 +1,45 @@
-import { createContext, useState, useCallback, useMemo } from "react";
+import {
+  createContext,
+  useState,
+  useCallback,
+  useMemo,
+  useEffect,
+} from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
 
 export const AdminContext = createContext();
 
 const AdminContextProvider = ({ children }) => {
-  const [aToken, setAToken] = useState(localStorage.getItem("atoken") || "");
+  const [aToken, setAToken] = useState("");
   const [doctors, setDoctors] = useState([]);
   const [appointments, setAppointments] = useState([]);
   const [dashData, setDashData] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true); // 🔥 important
 
   const backendUrl = import.meta.env.VITE_BACKEND_URL;
+
+  // ✅ Restore token on refresh
+  useEffect(() => {
+    const token = localStorage.getItem("atoken");
+    if (token) {
+      setAToken(token);
+    }
+    setLoading(false);
+  }, []);
+
+  // ✅ Sync token to localStorage
+  useEffect(() => {
+    if (aToken) {
+      localStorage.setItem("atoken", aToken);
+    }
+  }, [aToken]);
+
+  // ✅ Logout function (IMPORTANT)
+  const logout = () => {
+    localStorage.removeItem("atoken");
+    setAToken("");
+  };
 
   // ✅ Get Dashboard Data
   const getDashData = useCallback(async () => {
@@ -28,7 +56,7 @@ const AdminContextProvider = ({ children }) => {
         toast.error(data.message);
       }
     } catch (error) {
-      toast.error(error.message);
+      toast.error(error.response?.data?.message || error.message);
     }
   }, [aToken, backendUrl]);
 
@@ -49,7 +77,7 @@ const AdminContextProvider = ({ children }) => {
         toast.error(data.message);
       }
     } catch (error) {
-      toast.error(error.message);
+      toast.error(error.response?.data?.message || error.message);
     } finally {
       setLoading(false);
     }
@@ -77,17 +105,18 @@ const AdminContextProvider = ({ children }) => {
           toast.error(data.message);
         }
       } catch (error) {
-        toast.error(error.message);
+        toast.error(error.response?.data?.message || error.message);
       }
     },
     [aToken, backendUrl, getAllAppointments, getDashData],
   );
 
-  // ✅ STABLE CONTEXT VALUE
+  // ✅ Context value
   const value = useMemo(
     () => ({
       aToken,
       setAToken,
+      logout, // 👈 added
       backendUrl,
       doctors,
       appointments,
