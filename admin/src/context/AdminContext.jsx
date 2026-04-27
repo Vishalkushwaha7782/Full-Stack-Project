@@ -15,7 +15,7 @@ const AdminContextProvider = ({ children }) => {
   const [doctors, setDoctors] = useState([]);
   const [appointments, setAppointments] = useState([]);
   const [dashData, setDashData] = useState(null);
-  const [loading, setLoading] = useState(true); // 🔥 important
+  const [loading, setLoading] = useState(true);
 
   const backendUrl = import.meta.env.VITE_BACKEND_URL;
 
@@ -35,7 +35,7 @@ const AdminContextProvider = ({ children }) => {
     }
   }, [aToken]);
 
-  // ✅ Logout function (IMPORTANT)
+  // ✅ Logout
   const logout = () => {
     localStorage.removeItem("atoken");
     setAToken("");
@@ -83,6 +83,52 @@ const AdminContextProvider = ({ children }) => {
     }
   }, [aToken, backendUrl]);
 
+  // ✅ Get All Doctors
+  const getAllDoctors = useCallback(async () => {
+    if (!aToken) return;
+
+    try {
+      const { data } = await axios.get(backendUrl + "/api/admin/all-doctors", {
+        headers: { Authorization: `Bearer ${aToken}` },
+      });
+
+      if (data.success) {
+        setDoctors(data.doctors || []);
+      } else {
+        toast.error(data.message);
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.message || error.message);
+    }
+  }, [aToken, backendUrl]);
+
+  // ✅ Change Doctor Availability
+  const changeAvailability = useCallback(
+    async (doctorId) => {
+      if (!aToken) return;
+
+      try {
+        const { data } = await axios.post(
+          backendUrl + "/api/admin/change-availability",
+          { doctorId },
+          {
+            headers: { Authorization: `Bearer ${aToken}` },
+          },
+        );
+
+        if (data.success) {
+          toast.success(data.message);
+          getAllDoctors(); // refresh doctors list
+        } else {
+          toast.error(data.message);
+        }
+      } catch (error) {
+        toast.error(error.response?.data?.message || error.message);
+      }
+    },
+    [aToken, backendUrl, getAllDoctors],
+  );
+
   // ✅ Cancel Appointment
   const cancelAppointment = useCallback(
     async (appointmentId) => {
@@ -116,7 +162,7 @@ const AdminContextProvider = ({ children }) => {
     () => ({
       aToken,
       setAToken,
-      logout, // 👈 added
+      logout,
       backendUrl,
       doctors,
       appointments,
@@ -124,6 +170,8 @@ const AdminContextProvider = ({ children }) => {
       loading,
       getDashData,
       getAllAppointments,
+      getAllDoctors,
+      changeAvailability,
       cancelAppointment,
     }),
     [
@@ -135,6 +183,8 @@ const AdminContextProvider = ({ children }) => {
       loading,
       getDashData,
       getAllAppointments,
+      getAllDoctors,
+      changeAvailability,
       cancelAppointment,
     ],
   );
