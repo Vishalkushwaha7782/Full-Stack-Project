@@ -56,7 +56,7 @@ const AddDoctor = () => {
         formData,
         {
           headers: {
-            Authorization: `Bearer ${token}`, // ✅ THIS IS THE FIX
+            Authorization: `Bearer ${token}`, // THIS IS THE FIX
             "Content-Type": "multipart/form-data",
           },
         },
@@ -65,7 +65,7 @@ const AddDoctor = () => {
       if (data.success) {
         toast.success("Doctor Added Successfully");
 
-        // ✅ Reset form
+        // Reset form
         setDocImg(false);
         setName("");
         setEmail("");
