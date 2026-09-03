@@ -17,13 +17,24 @@ const Login = () => {
   const onSubmitHandler = async (event) => {
     event.preventDefault();
 
+    console.log("FORM SUBMITTED");
+    console.log("STATE:", state);
+    console.log("NAME:", name);
+    console.log("EMAIL:", email);
+    console.log("BACKEND URL:", backendUrl);
+
     try {
       if (state === "Sign Up") {
+        console.log("REGISTER API CALLING:", backendUrl + "/api/user/register");
+
         const { data } = await axios.post(backendUrl + "/api/user/register", {
           name,
           password,
           email,
         });
+
+        console.log("REGISTER RESPONSE:", data);
+
         if (data.success) {
           localStorage.setItem("token", data.token);
           setToken(data.token);
@@ -31,10 +42,15 @@ const Login = () => {
           toast.error(data.message);
         }
       } else {
+        console.log("LOGIN API CALLING:", backendUrl + "/api/user/login");
+
         const { data } = await axios.post(backendUrl + "/api/user/login", {
           password,
           email,
         });
+
+        console.log("LOGIN RESPONSE:", data);
+
         if (data.success) {
           localStorage.setItem("token", data.token);
           setToken(data.token);
@@ -43,7 +59,11 @@ const Login = () => {
         }
       }
     } catch (error) {
-      toast.error(error.message);
+      console.log("FULL ERROR:", error);
+      console.log("ERROR MESSAGE:", error.message);
+      console.log("SERVER RESPONSE:", error.response?.data);
+
+      toast.error(error.response?.data?.message || error.message);
     }
   };
 
